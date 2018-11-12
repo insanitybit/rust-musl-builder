@@ -3,7 +3,7 @@
 FROM ubuntu:16.04
 
 # The Rust toolchain to use when building our image.  Set by `hooks/build`.
-ARG TOOLCHAIN=stable
+ARG TOOLCHAIN=nightly
 
 # Make sure we have basic dev tools for building C libraries.  Our goal
 # here is to support the musl-libc builds and Cargo builds needed for a
@@ -30,6 +30,7 @@ RUN apt-get update && \
         sudo \
         xutils-dev \
         gcc-4.7-multilib-arm-linux-gnueabihf \
+        golang \
         && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     useradd rust --user-group --create-home --shell /bin/bash --groups sudo && \
@@ -38,6 +39,8 @@ RUN apt-get update && \
     tar xf mdbook-v$MDBOOK_VERSION-x86_64-unknown-linux-musl.tar.gz && \
     mv mdbook /usr/local/bin/ && \
     rm -f mdbook-v$MDBOOK_VERSION-x86_64-unknown-linux-musl.tar.gz
+
+RUN sudo ln -s "/usr/bin/g++" "/usr/bin/musl-g++"
 
 # Allow sudo without a password.
 ADD sudoers /etc/sudoers.d/nopasswd
