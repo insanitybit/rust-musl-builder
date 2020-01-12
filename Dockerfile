@@ -3,7 +3,8 @@
 FROM ubuntu:16.04
 
 # The Rust toolchain to use when building our image.  Set by `hooks/build`.
-ARG TOOLCHAIN=nightly
+ARG TOOLCHAIN=stable
+
 
 # Make sure we have basic dev tools for building C libraries.  Our goal
 # here is to support the musl-libc builds and Cargo builds needed for a
@@ -14,6 +15,7 @@ ARG TOOLCHAIN=nightly
 # any more software.
 #
 # `mdbook` is the standard Rust tool for making searchable HTML manuals.
+
 RUN apt-get update && \
     apt-get install -y \
         build-essential \
@@ -21,6 +23,10 @@ RUN apt-get update && \
         curl \
         file \
         git \
+        libclang-dev \
+        libclang1 \
+        libclang* \
+        clang \
         musl-dev \
         musl-tools \
         libpq-dev \
@@ -53,17 +59,20 @@ RUN mkdir -p /home/rust/libs /home/rust/src
 # Set up our path with all our binary directories, including those for the
 # musl-gcc toolchain and for our Rust toolchain.
 ENV PATH=/home/rust/.cargo/bin:/usr/local/musl/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV LIBCLANG_PATH=/usr/lib/llvm-3.8/lib
+
 
 # Install our Rust toolchain and the `musl` target.  We patch the
 # command-line we pass to the installer so that it won't attempt to
 # interact with the user or fool around with TTYs.  We also set the default
 # `--target` to musl so that our users don't need to keep overriding it
 # manually.
-RUN curl https://sh.rustup.rs -sSf | \
+RUN echo "Installing rust" && curl https://sh.rustup.rs -sSf | \
     sh -s -- -y --default-toolchain $TOOLCHAIN && \
     rustup target add x86_64-unknown-linux-musl && \
     rustup target add armv7-unknown-linux-musleabihf
 ADD cargo-config.toml /home/rust/.cargo/config
+
 
 # Set up a `git credentials` helper for using GH_USER and GH_TOKEN to access
 # private repositories if desired.
